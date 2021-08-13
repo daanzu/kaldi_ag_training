@@ -10,13 +10,12 @@ args = parser.parse_args()
 
 if not os.path.exists(args.filename):
     raise Exception('File does not exist: %s' % args.filename)
-os.mkdir(args.output_dir, exist_ok=True)
-
+os.makedirs(args.output_dir, exist_ok=True)
 lexicon = set()
 if args.lexicon_file:
     with open(args.lexicon_file, 'r') as f:
         for line in f:
-            word, num = line.strip().split()
+            word, num = line.strip().split(" ", 1)
             lexicon.add(word)
 
 utt2spk_dict, wav_dict, text_dict = {}, {}, {}
@@ -32,13 +31,13 @@ with open(args.filename, 'r') as f:
         wav_dict[utt_id] = wav_path
         text_dict[utt_id] = text
 
-with open(os.path.join(dir, 'utt2spk'), 'w') as f:
+with open(os.path.join(args.output_dir, 'utt2spk'), 'w') as f:
     for (key, val) in utt2spk_dict.items():
         f.write('%s %s\n' % (key, val))
-with open(os.path.join(dir, 'wav.scp'), 'w') as f:
+with open(os.path.join(args.output_dir, 'wav.scp'), 'w') as f:
     for (key, val) in wav_dict.items():
         f.write('%s %s\n' % (key, val))
-with open(os.path.join(dir, 'text'), 'w') as f:
+with open(os.path.join(args.output_dir, 'text'), 'w') as f:
     for (key, val) in text_dict.items():
         f.write('%s %s\n' % (key, val))
 
