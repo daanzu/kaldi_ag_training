@@ -8,11 +8,11 @@ Docker image and scripts for training finetuned or completely personal speech mo
 
 ## Usage
 
-All commands are run in the Docker container as follows. Training on the CPU should work, just much more slowly. To do so, remove the `--runtime=nvidia` and use the image `daanzu/kaldi_ag_training_cpu:2021-08-04` instead the GPU image.
+All commands are run in the Docker container as follows. Training on the CPU should work, just much more slowly. To do so, remove the `--runtime=nvidia` and use the image `daanzu/kaldi_ag_training_cpu:2020-11-28` instead the GPU image.
 
 ```bash
 docker run -it --rm -v $(pwd):/mnt/input -w /mnt/input --user "$(id -u):$(id -g)" \
-    --runtime=nvidia daanzu/kaldi_ag_training_gpu:2021-08-04 \
+    --runtime=nvidia daanzu/kaldi_ag_training_gpu:2020-11-28 \
     [command and args...]
 ```
 
@@ -30,6 +30,8 @@ docker run [...] bash run.personal.sh kaldi_model_daanzu_20200905_1ep-mediumlm-b
 
 # When training completes, export trained model
 python3 export_trained_model.py {finetune,personal} [optional output directory]
+# Finally run the following in your kaldi-active-grammar python environment (will take as much as an hour and several GB of RAM)
+python3 -m kaldi_active_grammar compile_agf_dictation_graph -v -m [model_dir] G.fst
 ```
 
 ### Notes
@@ -48,6 +50,8 @@ python3 export_trained_model.py {finetune,personal} [optional output directory]
 * The training commands (`run.*.sh`) accept many optional parameters. More info later.
 
     * `--stage n` : Skip to given stage
+
+* I decided to try to treat the docker image as evergreen, and keep the things liable to change a lot like scripts in the git repo instead.
 
 ## License
 
