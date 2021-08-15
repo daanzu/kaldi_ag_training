@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-import argparse, os
+import argparse, os, re
 
 parser = argparse.ArgumentParser(description='Convert a TSV file to Kaldi SCP files.')
 parser.add_argument('filename', help='The TSV file to convert.')
 parser.add_argument('output_dir', default='dataset', help='The directory to save the output files.')
 parser.add_argument('-l', '--lexicon_file', help='The name of the lexicon file, for filtering out out-of-vocabulary utterances.')
+parser.add_argument('--no_sanitize', action='store_true', help='Do not sanitize the input text (lower casing, and removing punctuation).')
 args = parser.parse_args()
 
 if not os.path.exists(args.filename):
@@ -15,8 +16,10 @@ lexicon = set()
 if args.lexicon_file:
     with open(args.lexicon_file, 'r') as f:
         for line in f:
-            word, num = line.strip().split(None, 1)
+            word = line.strip().split(None, 1)[0]
             lexicon.add(word)
+else:
+    print("WARNING: No lexicon file specified.")
 
 utt2spk_dict, wav_dict, text_dict = {}, {}, {}
 with open(args.filename, 'r') as f:
@@ -25,6 +28,10 @@ with open(args.filename, 'r') as f:
         text = fields[4]
         wav_path = fields[0]
         utt_id = os.path.splitext(os.path.basename(wav_path))[0]
+        if not args.no_sanitize:
+            text = text.lower()
+            text = re.sub(r'[\-]', ' ', text)
+            text = re.sub(r'[^a-z\']', '', text)
         if lexicon and any([word not in lexicon for word in text.split()]):
             continue
         utt2spk_dict[utt_id] = utt_id
