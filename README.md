@@ -53,6 +53,11 @@ python3 -m kaldi_active_grammar compile_agf_dictation_graph -v -m [model_dir] G.
 
 * I decided to try to treat the docker image as evergreen, and keep the things liable to change a lot like scripts in the git repo instead.
 
+## Related Repositories
+
+* [daanzu/speech-training-recorder](https://github.com/daanzu/speech-training-recorder): Simple GUI application to help record audio dictated from given text prompts, for use with training speech recognition or speech synthesis.
+* [daanzu/kaldi-active-grammar](https://github.com/daanzu/kaldi-active-grammar): Python Kaldi speech recognition with grammars that can be set active/inactive dynamically at decode-time.
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3 (AGPL-3.0-or-later). See the [LICENSE file](LICENSE) for details. If this license is problematic for you, please contact me.
