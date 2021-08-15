@@ -35,8 +35,6 @@ mkdir -p conf data/{lang/phones,finetune} exp extractor
 cp $model/conf/{mfcc,mfcc_hires}.conf conf/
 cp $model/conf/online_cmvn.conf conf/  # Only needed if/for finetune_ivector_extractor
 cp $model/conf/online_cmvn.conf extractor/
-# cp $model/ivector_extractor/final.{ie,dubm,mat} extractor/  # Careful not to overwrite finetuned ivector_extractor!
-cp $model/ivector_extractor/global_cmvn.stats extractor/
 cp $model/conf/online_cmvn_iextractor extractor/ 2>/dev/null || true
 cp $model/conf/splice.conf extractor/splice_opts
 echo "18" > data/lang/oov.int
@@ -44,6 +42,12 @@ cp $model/{words,phones}.txt data/lang/
 cp $model/disambig.int data/lang/phones/
 cp $model/wdisambig_{words,phones}.int data/lang/phones/  # Only needed if/for mkgraph.sh
 echo "3" > $model/frame_subsampling_factor
+
+if [[ ! "$*" =~ .*"--finetune-ivector-extractor true".* ]]; then
+    # Careful not to overwrite finetuned ivector_extractor!
+    cp $model/ivector_extractor/final.{ie,dubm,mat} extractor/
+    cp $model/ivector_extractor/global_cmvn.stats extractor/
+fi
 
 echo "1:2:3:4:5:6:7:8:9:10:11:12:13:14:15" > data/lang/phones/context_indep.csl
 echo "1:2:3:4:5:6:7:8:9:10:11:12:13:14:15" > data/lang/phones/silence.csl
