@@ -15,7 +15,7 @@ lexicon = set()
 if args.lexicon_file:
     with open(args.lexicon_file, 'r') as f:
         for line in f:
-            word, num = line.strip().split(" ", 1)
+            word, num = line.strip().split(None, 1)
             lexicon.add(word)
 
 utt2spk_dict, wav_dict, text_dict = {}, {}, {}
