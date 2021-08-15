@@ -49,7 +49,8 @@ python3 -m kaldi_active_grammar compile_agf_dictation_graph -v -m [model_dir] G.
 
 * The training commands (`run.*.sh`) accept many optional parameters. More info later.
 
-    * `--stage n` : Skip to given stage
+    * `--stage n` : Skip to given stage.
+    * `--num-utts-subset 3000` : You may need this parameter to prevent an error at the beginning of nnet training if your training data contains many short (command-like) utterances. (3000 is a perhaps overly careful suggestion; 300 is the default value.)
 
 * I decided to try to treat the docker image as evergreen, and keep the things liable to change a lot like scripts in the git repo instead.
 
