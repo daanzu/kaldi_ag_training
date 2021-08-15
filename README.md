@@ -4,11 +4,11 @@
 [![Donate](https://img.shields.io/badge/donate-Patreon-orange.svg)](https://www.patreon.com/daanzu)
 [![Donate](https://img.shields.io/badge/donate-PayPal-green.svg)](https://paypal.me/daanzu)
 
-Docker image and scripts for training finetuned or completely personal speech models. Particularly for use with [kaldi-active-grammar](https://github.com/daanzu/kaldi-active-grammar).
+Docker image and scripts for training finetuned or completely personal Kaldi speech models. Particularly for use with [kaldi-active-grammar](https://github.com/daanzu/kaldi-active-grammar).
 
 ## Usage
 
-All commands are run in the Docker container as follows. Training on the CPU should work, just much more slowly. To do so, remove the `--runtime=nvidia` and use the image `daanzu/kaldi_ag_training_cpu:2020-11-28` instead the GPU image.
+All commands are run in the Docker container as follows. Training on the CPU should work, just much more slowly. To do so, remove the `--runtime=nvidia` and use the image `daanzu/kaldi_ag_training:2020-11-28` instead the GPU image.
 
 ```bash
 docker run -it --rm -v $(pwd):/mnt/input -w /mnt/input --user "$(id -u):$(id -g)" \
