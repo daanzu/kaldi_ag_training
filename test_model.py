@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 
-import argparse, math, os, sys, wave
+import argparse, math, multiprocessing, os, sys, wave
 
 from kaldi_active_grammar import PlainDictationRecognizer
-
-parser = argparse.ArgumentParser(description='Run evaluation test of kaldi_active_grammar model.')
-parser.add_argument('filename', help='The dataset TSV file to test with.')
-parser.add_argument('model_dir', nargs='?', default='exported_model', help='Model directory.')
-args = parser.parse_args()
 
 # From wenet-e2e/wenet, licensed under the Apache License 2.0
 class Calculator:
@@ -140,24 +135,6 @@ class Calculator:
   def keys(self) :
       return list(self.data.keys())
 
-recognizer = PlainDictationRecognizer(model_dir=args.model_dir)
-calculator = Calculator()
-
-with open(args.filename, 'r') as f:
-    for line in f:
-        fields = line.strip().split('\t')
-        text = fields[4]
-        wav_path = fields[0]
-        if not os.path.exists(wav_path):
-            print(f"{wav_path} does not exist")
-            continue
-        with wave.open(wav_path, 'rb') as wav_file:
-            data = wav_file.readframes(wav_file.getnframes())
-            output_str, info = recognizer.decode_utterance(data)
-        print(f"Ref: {text}")
-        print(f"Hyp: {output_str}")
-        calculator.calculate(text.strip().split(), output_str.strip().split())
-
 def er_margin_of_error(error, n, z=1.96):
     error = max(0, min(error, 100))
     if n == 0: return float('nan')
@@ -165,11 +142,61 @@ def er_margin_of_error(error, n, z=1.96):
     moe = z * math.sqrt(error * (1 - error) / n)
     return moe * 100
 
-result = calculator.overall()
-if result['all'] != 0 :
-    wer = float(result['ins'] + result['sub'] + result['del']) * 100.0 / result['all']
-else :
-    wer = 0.0
-print('Overall -> %4.2f %%' % wer, end = ' ')
-print('+/- %4.2f %%' % er_margin_of_error(wer, n=result['all']), end = ' ')
-print('N=%d C=%d S=%d D=%d I=%d' % (result['all'], result['cor'], result['sub'], result['del'], result['ins']))
+def initialize(model_dir):
+    global recognizer
+    recognizer = PlainDictationRecognizer(model_dir=model_dir)
+
+def recognize(wav_path, text):
+    global recognizer
+    with wave.open(wav_path, 'rb') as wav_file:
+        data = wav_file.readframes(wav_file.getnframes())
+    output_str, info = recognizer.decode_utterance(data)
+    print(f"Ref: {text}")
+    print(f"Hyp: {output_str}")
+    return output_str, text
+
+def main():
+    parser = argparse.ArgumentParser(description='Run evaluation test of kaldi_active_grammar model.')
+    parser.add_argument('filename', help='Dataset TSV file to test with.')
+    parser.add_argument('model_dir', nargs='?', default='exported_model', help='Model directory.')
+    parser.add_argument('-l', '--lexicon_file', help='Filename of the lexicon file, for filtering out out-of-vocabulary utterances.')
+    args = parser.parse_args()
+
+    calculator = Calculator()
+
+    lexicon = set()
+    if args.lexicon_file:
+        with open(args.lexicon_file, 'r') as f:
+            for line in f:
+                word = line.strip().split(None, 1)[0]
+                lexicon.add(word)
+
+    # Initialize first before going parallel, in case any model rebuilding is needed, which must be performed serially.
+    initialize(args.model_dir)
+
+    with open(args.filename, 'r') as f, multiprocessing.Pool(initializer=initialize, initargs=(args.model_dir,)) as pool:
+        submissions = []
+        for line in f:
+            fields = line.strip().split('\t')
+            text = fields[4]
+            wav_path = fields[0]
+            if not os.path.exists(wav_path):
+                print(f"{wav_path} does not exist")
+                continue
+            if args.lexicon_file and any(word not in lexicon for word in text.split()):
+                continue
+            submissions.append((wav_path, text,))
+        for output_str, text in pool.starmap(recognize, submissions, chunksize=1):
+            calculator.calculate(text.strip().split(), output_str.strip().split())
+
+    result = calculator.overall()
+    if result['all'] != 0 :
+        wer = float(result['ins'] + result['sub'] + result['del']) * 100.0 / result['all']
+    else :
+        wer = 0.0
+    print('Overall -> %4.2f %%' % wer, end = ' ')
+    print('+/- %4.2f %%' % er_margin_of_error(wer, n=result['all']), end = ' ')
+    print('N=%d C=%d S=%d D=%d I=%d' % (result['all'], result['cor'], result['sub'], result['del'], result['ins']))
+
+if __name__ == '__main__':
+    main()
