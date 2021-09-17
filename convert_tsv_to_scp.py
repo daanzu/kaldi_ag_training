@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser(description='Convert a TSV file to Kaldi SCP fi
 parser.add_argument('filename', help='Dataset TSV file to convert.')
 parser.add_argument('output_dir', nargs='?', default='dataset', help='Directory to save the output files.')
 parser.add_argument('-l', '--lexicon_file', default='kaldi_model_daanzu_20200905_1ep-mediumlm-base/dict/lexicon.txt', help='Filename of the lexicon file, for filtering out out-of-vocabulary utterances.')
-parser.add_argument('--no_lexicon', action='store_true', help='Do not filter utterances based on lexicon to remove ones containing out-of-vocabulary wordstt.')
+parser.add_argument('--no_lexicon', action='store_true', help='Do not filter utterances based on lexicon to remove ones containing out-of-vocabulary words.')
 parser.add_argument('--no_sanitize', action='store_true', help='Do not sanitize the input text (lower casing, and removing punctuation).')
 args = parser.parse_args()
 

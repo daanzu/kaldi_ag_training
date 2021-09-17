@@ -184,6 +184,7 @@ def main():
                 print(f"{wav_path} does not exist")
                 continue
             if args.lexicon_file and any(word not in lexicon for word in text.split()):
+                print(f"{wav_path} is out of vocabulary: {text}")
                 continue
             submissions.append((wav_path, text,))
         for output_str, text in pool.starmap(recognize, submissions, chunksize=1):
