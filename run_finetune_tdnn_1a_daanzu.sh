@@ -35,16 +35,15 @@ tree_dir=exp/nnet3_chain/tree_sp
 # dir=${src_dir}_${data_set}
 dir=exp/nnet3_chain/${data_set}
 
+train_affix=_sp_vp_hires
 respect_speaker_info=false
 finetune_ivector_extractor=false
 finetune_phonelm=false
 
 num_gpus=1
 num_epochs=5
-# initial_lrate=0.0005
-# final_lrate=0.00002
-initial_lrate=.00025
-final_lrate=.000025
+initial_lrate=.00025  # 0.0005
+final_lrate=.000025  # 0.00002
 minibatch_size=128,64
 primary_lr_factor=0.25  # learning-rate factor for all except last layer in transferred source model (last layer is 1.0)
 
@@ -54,7 +53,7 @@ get_egs_stage=-10
 common_egs_dir=  # you can set this to use previously dumped egs.
 egs_opts="--num-utts-subset 300 --max-jobs-run 4 --max-shuffle-jobs-run 10"  # --num-utts-subset 3000 --max-jobs-run 4 --max-shuffle-jobs-run 10
 dropout_schedule='0,0@0.20,0.5@0.50,0'
-frames_per_eg=150,110,100
+frames_per_eg=150,110,100,50  # Standard default is 150,110,100 but try 150,110,100,50 for training with utterances of short commands
 chain_left_tolerance=1
 chain_right_tolerance=1
 
@@ -109,10 +108,10 @@ if [ $stage -le 1 ]; then
   utils/data/perturb_data_dir_speed_3way.sh ${data_dir} ${data_dir}_sp || exit 1;
   compute_features $conf_dir/mfcc.conf _sp
 
-  rm -rf ${data_dir}_sp_hires
-  utils/copy_data_dir.sh ${data_dir}_sp ${data_dir}_sp_hires
-  utils/data/perturb_data_dir_volume.sh ${data_dir}_sp_hires || exit 1;
-  compute_features $conf_dir/mfcc_hires.conf _sp_hires
+  rm -rf ${data_dir}_sp_vp_hires
+  utils/copy_data_dir.sh ${data_dir}_sp ${data_dir}_sp_vp_hires
+  utils/data/perturb_data_dir_volume.sh ${data_dir}_sp_vp_hires || exit 1;
+  compute_features $conf_dir/mfcc_hires.conf _sp_vp_hires
 
   rm -rf ${data_dir}_sp_novp_hires
   utils/copy_data_dir.sh ${data_dir}_sp ${data_dir}_sp_novp_hires
@@ -128,12 +127,11 @@ if [ $stage -le 1 ]; then
   compute_features $conf_dir/mfcc_hires.conf _hires
 fi
 
-train_affix=_hires
-# train_affix=_sp_novp_hires
+# train_affix=_hires
 train_data_dir=${data_dir}${train_affix}
 train_ivector_dir=exp/nnet3_chain/ivectors_${data_set}${train_affix}
 lat_dir=exp/nnet3_chain/lats_${data_set}${train_affix}
-lores_train_data_dir=${data_dir}_sp
+# lores_train_data_dir=${data_dir}_sp
 # extractor_dir=exp/nnet3_chain/extractor_${data_set}${train_affix}
 
 if $finetune_ivector_extractor; then
