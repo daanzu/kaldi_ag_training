@@ -1,1 +1,9 @@
-*
+*/
+steps
+utils
+params.txt
+core
+*.tsv
+*.zip
+*.gz
+*.xz
