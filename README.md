@@ -35,7 +35,7 @@ bash run_docker.sh bash run.personal.sh kaldi_model_daanzu_20200905_1ep-mediumlm
 # When training completes, export trained model
 python3 export_trained_model.py {finetune,personal} [optional output directory]
 # Finally run the following in your kaldi-active-grammar python environment (will take as much as an hour and several GB of RAM)
-python3 -m kaldi_active_grammar compile_agf_dictation_graph -v -m [model_dir] [model_dir]/G.fst
+python3 -m kaldi_active_grammar compile_agf_dictation_graph -v -m [model_dir]
 
 # Test a new or old model
 python3 test_model.py testdata.tsv [model_dir]

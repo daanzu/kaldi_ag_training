@@ -34,4 +34,4 @@ elif args.type == 'finetune':
 
 print(f"Wrote exported {args.type} model to {args.output_dir}")
 print("NOTE: You still must run the following in your kaldi-active-grammar python environment:")
-print("python -m kaldi_active_grammar compile_agf_dictation_graph -v -m [model_dir] G.fst")
+print("python -m kaldi_active_grammar compile_agf_dictation_graph -v -m [model_dir]")
