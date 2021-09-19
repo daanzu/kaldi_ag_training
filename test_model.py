@@ -142,15 +142,19 @@ def er_margin_of_error(error, n, z=1.96):
     moe = z * math.sqrt(error * (1 - error) / n)
     return moe * 100
 
-def initialize(model_dir):
-    global recognizer
+def initialize_kaldi(model_dir):
+    global call_recognizer
     recognizer = PlainDictationRecognizer(model_dir=model_dir)
+    def decode(data):
+        output_str, info = recognizer.decode_utterance(data)
+        return output_str
+    call_recognizer = decode
 
 def recognize(wav_path, text):
-    global recognizer
+    global call_recognizer
     with wave.open(wav_path, 'rb') as wav_file:
         data = wav_file.readframes(wav_file.getnframes())
-    output_str, info = recognizer.decode_utterance(data)
+    output_str = call_recognizer(data)
     print(f"Ref: {text}")
     print(f"Hyp: {output_str}")
     return output_str, text
@@ -163,6 +167,7 @@ def main():
     args = parser.parse_args()
 
     calculator = Calculator()
+    initialize = initialize_kaldi
 
     lexicon = set()
     if args.lexicon_file:
