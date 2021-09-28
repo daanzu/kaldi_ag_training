@@ -17,7 +17,7 @@ def normalize_script(script):
 lines = []
 with open(args.filename, 'r') as f:
     for line in f:
-        fields = line.strip().split('\t')
+        fields = line.rstrip('\n').split('\t')
         text = fields[4]
         text = normalize_script(text)
         fields[4] = text

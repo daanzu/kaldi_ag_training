@@ -46,12 +46,12 @@ reporting_email=
 test_online_decoding=true  # if true, it will run the last decoding stage.
 
 # daanzu options
-tdnnf_dim=1024
+tdnnf_dim=1024  # Must be one of: 738,1024,1536
 decode_name=
 respect_speaker_info=true
 initial_lrate=
 final_lrate=
-num_epochs=20
+num_epochs=5
 num_gpus=1
 spot=
 

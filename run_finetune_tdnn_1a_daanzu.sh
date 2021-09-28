@@ -81,7 +81,7 @@ function write_params() {
 function log_stage() {
   echo
   echo "# Stage $1"
-  [ -z "$2" ] && echo "# $2"
+  [ -n "$2" ] && echo "# $2"
   echo "# $(date)"
   echo
 }

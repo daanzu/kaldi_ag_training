@@ -15,7 +15,7 @@ if not os.path.exists(args.new_wav_path):
 lines = []
 with open(args.filename, 'r') as f:
     for line in f:
-        fields = line.strip().split('\t')
+        fields = line.rstrip('\n').split('\t')
         wav_path = fields[0]
         wav_path = re.sub(r'\\', '/', wav_path)
         wav_path = re.sub(r'^.*/', '', wav_path)

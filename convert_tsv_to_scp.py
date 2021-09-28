@@ -32,7 +32,7 @@ num_entries, num_dropped_lexicon, num_dropped_missing_wav = 0, 0, 0
 with open(args.filename, 'r') as f:
     for line in f:
         num_entries += 1
-        fields = line.strip().split('\t')
+        fields = line.rstrip('\n').split('\t')
         text = fields[4]
         wav_path = fields[0]
         utt_id = os.path.splitext(os.path.basename(wav_path))[0]
