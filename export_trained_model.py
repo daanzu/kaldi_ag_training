@@ -25,12 +25,15 @@ if args.type == 'personal':
     for name in 'final.dubm final.ie final.mat global_cmvn.stats'.split():
         shutil.copy2(os.path.join('exp/chain/tdnn1h_sp_online', 'ivector_extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
     shutil.copy2('exp/chain/tdnn1h_sp/accuracy.report', os.path.join(args.output_dir, 'training'))
-    shutil.copy2('params.txt', os.path.join(args.output_dir, 'training'))
 
 elif args.type == 'finetune':
     for name in 'final.mdl'.split():
         shutil.copy2(os.path.join('exp/nnet3_chain/finetune', name), args.output_dir)
+    for name in 'final.dubm final.ie final.mat global_cmvn.stats'.split():
+        shutil.copy2(os.path.join('extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
     shutil.copy2('exp/nnet3_chain/finetune/accuracy.report', os.path.join(args.output_dir, 'training'))
+
+shutil.copy2('params.txt', os.path.join(args.output_dir, 'training'))
 
 print(f"Wrote exported {args.type} model to {args.output_dir}")
 print("NOTE: You still must run the following in your kaldi-active-grammar python environment:")

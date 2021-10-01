@@ -164,9 +164,9 @@ def main():
     parser.add_argument('filename', help='Dataset TSV file to test with.')
     parser.add_argument('model_dir', nargs='?', default='exported_model', help='Model directory.')
     parser.add_argument('-l', '--lexicon_file', help='Filename of the lexicon file, for filtering out out-of-vocabulary utterances.')
+    parser.add_argument('-p', '--parallel', help='Number of parallel processes to use.', type=int, default=None)
     args = parser.parse_args()
 
-    calculator = Calculator()
     initialize = initialize_kaldi
 
     lexicon = set()
@@ -176,13 +176,15 @@ def main():
                 word = line.strip().split(None, 1)[0]
                 lexicon.add(word)
 
+    calculator = Calculator()
+
     # Initialize first before going parallel, in case any model rebuilding is needed, which must be performed serially.
     initialize(args.model_dir)
 
-    with open(args.filename, 'r') as f, multiprocessing.Pool(initializer=initialize, initargs=(args.model_dir,)) as pool:
+    with open(args.filename, 'r') as f, multiprocessing.Pool(args.parallel, initializer=initialize, initargs=(args.model_dir,)) as pool:
         submissions = []
         for line in f:
-            fields = line.strip().split('\t')
+            fields = line.rstrip('\n').split('\t')
             text = fields[4]
             wav_path = fields[0]
             if not os.path.exists(wav_path):

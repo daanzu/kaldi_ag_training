@@ -136,13 +136,13 @@ lat_dir=exp/nnet3_chain/lats_${data_set}${train_affix}
 
 if $finetune_ivector_extractor; then
   train_set=${data_set}
+  temp_data_root=exp/nnet3_chain/diag_ubm
 
   if [ $stage -le 2 ]; then
     log_stage 2 "Finetune ivectors: Train diagonal UBM"
 
     echo "$0: computing a subset of data to train the diagonal UBM."
     # We'll use about a quarter of the data.
-    temp_data_root=exp/nnet3_chain/diag_ubm
     mkdir -p $temp_data_root
 
     num_utts_total=$(wc -l <data/${train_set}${train_affix}/utt2spk)
@@ -191,7 +191,7 @@ if $finetune_ivector_extractor; then
 
     # having a larger number of speakers is helpful for generalization, and to
     # handle per-utterance decoding well (iVector starts at zero).
-    ivectordir=exp/nnet3_chain/ivectors_${train_set}${train_affix}
+    ivectordir=${train_ivector_dir}
     temp_data_root=${ivectordir}
     utils/data/modify_speaker_info.sh --utts-per-spk-max 2 --respect-speaker-info $respect_speaker_info \
       data/${train_set}${train_affix} ${temp_data_root}/${train_set}${train_affix}_max2
