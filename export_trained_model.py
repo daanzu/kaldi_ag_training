@@ -20,19 +20,20 @@ shutil.copytree(args.base_model_dir, args.output_dir, ignore=shutil.ignore_patte
 os.makedirs(os.path.join(args.output_dir, 'training'), exist_ok=True)
 
 if args.type == 'personal':
+    base_dir = 'exp/chain/tdnn1h_sp_online'
     for name in 'final.mdl tree'.split():
-        shutil.copy2(os.path.join('exp/chain/tdnn1h_sp_online', name), args.output_dir)
+        shutil.copy2(os.path.join(base_dir, name), args.output_dir)
     for name in 'final.dubm final.ie final.mat global_cmvn.stats'.split():
-        shutil.copy2(os.path.join('exp/chain/tdnn1h_sp_online', 'ivector_extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
-    shutil.copy2('exp/chain/tdnn1h_sp/accuracy.report', os.path.join(args.output_dir, 'training'))
+        shutil.copy2(os.path.join(base_dir, 'ivector_extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
 
 elif args.type == 'finetune':
+    base_dir = 'exp/nnet3_chain/finetune'
     for name in 'final.mdl'.split():
-        shutil.copy2(os.path.join('exp/nnet3_chain/finetune', name), args.output_dir)
+        shutil.copy2(os.path.join(base_dir, name), args.output_dir)
     for name in 'final.dubm final.ie final.mat global_cmvn.stats'.split():
-        shutil.copy2(os.path.join('extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
-    shutil.copy2('exp/nnet3_chain/finetune/accuracy.report', os.path.join(args.output_dir, 'training'))
+        shutil.copy2(os.path.join('exp/nnet3_chain', 'extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
 
+shutil.copy2(os.path.join(base_dir, 'accuracy.report'), os.path.join(args.output_dir, 'training'))
 shutil.copy2('params.txt', os.path.join(args.output_dir, 'training'))
 
 print(f"Wrote exported {args.type} model to {args.output_dir}")

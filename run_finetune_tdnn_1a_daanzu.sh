@@ -236,9 +236,9 @@ fi
 if $finetune_phonelm; then
   if [ $stage -le 6 ]; then
     log_stage 6 "Copy data to allow building new finetuned phone_lm"
-    # Requires: tree_sp/{tree,final.mdl}
+    # Requires: $tree_dir/{tree,final.mdl}
     cp $lat_dir/ali.*.gz $lat_dir/num_jobs $tree_dir
-    # Note: actually do it by $train_stage <= -6
+    # Note: actually do it by setting $train_stage <= -6
   fi
 fi
 
