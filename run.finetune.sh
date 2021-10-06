@@ -34,17 +34,20 @@ ln -sf /opt/kaldi/egs/wsj/s5/utils
 extractor_dir=exp/nnet3_chain/extractor
 tree_dir=exp/nnet3_chain/tree_sp
 
-mkdir -p conf data/{lang/phones,finetune} exp $extractor_dir
+mkdir -p conf data/{lang/phones,finetune} exp exp/model_src_dir $extractor_dir
 cp $model/conf/{mfcc,mfcc_hires}.conf conf/
 cp $model/conf/online_cmvn.conf conf/  # Only needed if/for finetune_ivector_extractor
-echo "18" > data/lang/oov.int
 cp $model/conf/online_cmvn.conf $extractor_dir/
 cp $model/conf/online_cmvn_iextractor $extractor_dir/ 2>/dev/null || true
 cp $model/conf/splice.conf $extractor_dir/splice_opts
 cp $model/{words,phones}.txt data/lang/
 cp $model/disambig.int data/lang/phones/
 cp $model/wdisambig_{words,phones}.int data/lang/phones/  # Only needed if/for mkgraph.sh
-echo "3" > $model/frame_subsampling_factor
+cp $model/{phones.txt,final.mdl,tree} exp/model_src_dir/
+cp $model/cmvn_opts exp/model_src_dir/ 2>/dev/null || true
+
+[[ -f $model/oov.int ]] && cp $model/oov.int data/lang/oov.int || echo "18" > data/lang/oov.int
+[[ -f $model/frame_subsampling_factor ]] && cp $model/frame_subsampling_factor exp/model_src_dir/frame_subsampling_factor || echo "3" > exp/model_src_dir/frame_subsampling_factor
 
 if [[ ! "$*" =~ .*"--finetune-ivector-extractor true".* ]]; then
     # Careful not to overwrite finetuned ivector_extractor, if we are finetuning it!
@@ -88,7 +91,7 @@ cp -r $dataset/{text,wav.scp,utt2spk} data/finetune
 # ln -sfT /mnt/input/audio_data audio_data
 
 # utils/fix_data_dir.sh data/finetune
-$nice_cmd bash run_finetune_tdnn_1a_daanzu.sh --src-dir $model --nj $(nproc) $*
+$nice_cmd bash run_finetune_tdnn_1a_daanzu.sh --src-dir exp/model_src_dir --nj $(nproc) $*
 
 # > cp -r work.test.per/data/lang/phones/* work.test.fin/data/lang/phones/
 # > cp -r work.test.per/data/lang_chain/topo work.test.fin/data/lang/

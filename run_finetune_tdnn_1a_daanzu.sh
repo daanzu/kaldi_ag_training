@@ -231,7 +231,7 @@ if [ $stage -le 5 ]; then
   #   $train_data_dir $lang_dir ${src_dir} ${lat_dir}
 fi
 
-# NOTE: We must use the same tree as was used to train the nnet model (need the same num_pdfs).
+# NOTE: We must use the same tree as was used to train the nnet model (need the same num_pdfs), so we can't finetune it.
 
 if $finetune_phonelm; then
   if [ $stage -le 6 ]; then
@@ -244,11 +244,16 @@ fi
 
 if [ $stage -le 8 ]; then
   log_stage 8 "Copy source NN"
-  # Set the learning-rate-factor for all transferred layers but the last output layer to primary_lr_factor.
-  $train_cmd $dir/log/generate_input_mdl.log \
-    nnet3-am-copy --raw=true \
-      --edits="set-learning-rate-factor name=* learning-rate-factor=$primary_lr_factor; set-learning-rate-factor name=output* learning-rate-factor=1.0" \
-      $src_dir/final.mdl $dir/input.raw || exit 1;
+  if [ $primary_lr_factor = "1.0" ]; then
+    $train_cmd $dir/log/generate_input_model.log \
+      nnet3-am-copy --raw=true $src_dir/final.mdl $dir/input.raw || exit 1;
+  else
+    # Set the learning-rate-factor for all transferred layers but the last output layer to primary_lr_factor.
+    $train_cmd $dir/log/generate_input_mdl.log \
+      nnet3-am-copy --raw=true \
+        --edits="set-learning-rate-factor name=* learning-rate-factor=$primary_lr_factor; set-learning-rate-factor name=output* learning-rate-factor=1.0" \
+        $src_dir/final.mdl $dir/input.raw || exit 1;
+  fi
 fi
 
 # echo "$0: sleeping..."
