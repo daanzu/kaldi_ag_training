@@ -47,13 +47,14 @@ test_online_decoding=true  # if true, it will run the last decoding stage.
 
 # daanzu options
 tdnnf_dim=1024  # Must be one of: 738,1024,1536
-decode_name=
+ivector_dim=100 # dimension of the extracted i-vector
 respect_speaker_info=true
 initial_lrate=
 final_lrate=
 num_epochs=5
 num_gpus=1
 spot=
+decode_name=
 
 
 # End configuration section.
@@ -92,6 +93,7 @@ bash run_personal_nnet3_ivector_common.sh --stage $stage \
                                   --train-set $train_set \
                                   --gmm $gmm \
                                   --respect-speaker-info $respect_speaker_info \
+                                  --ivector-dim $ivector_dim \
                                   --nnet3-affix "$nnet3_affix" || exit 1;
 
 # Problem: We have removed the "train_" prefix of our training set in
@@ -178,7 +180,7 @@ if [ $tdnnf_dim -eq 738 ]; then
 
     mkdir -p $dir/configs
     cat <<EOF > $dir/configs/network.xconfig
-    input dim=100 name=ivector
+    input dim=$ivector_dim name=ivector
     input dim=40 name=input
 
     delta-layer name=delta
@@ -232,7 +234,7 @@ elif [ $tdnnf_dim -eq 1024 ]; then
 
     mkdir -p $dir/configs
     cat <<EOF > $dir/configs/network.xconfig
-    input dim=100 name=ivector
+    input dim=$ivector_dim name=ivector
     input dim=40 name=input
 
     delta-layer name=delta
@@ -288,7 +290,7 @@ elif [ $tdnnf_dim -eq 1536 ]; then
 
     mkdir -p $dir/configs
     cat <<EOF > $dir/configs/network.xconfig
-    input dim=100 name=ivector
+    input dim=$ivector_dim name=ivector
     input dim=40 name=input
 
     delta-layer name=delta

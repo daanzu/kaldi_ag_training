@@ -18,6 +18,7 @@ gmm=tri3b
 
 nnet3_affix=
 respect_speaker_info=true  # You may want false for one-to-one utt2spk.
+ivector_dim=100 # dimension of the extracted i-vector
 
 . ./cmd.sh
 . ./path.sh
@@ -109,6 +110,7 @@ if [ $stage -le 5 ]; then
   # 100.
   echo "$0: training the iVector extractor"
   steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj $nj \
+     --ivector-dim $ivector_dim \
      data/${train_set}_sp_hires exp/nnet3${nnet3_affix}/diag_ubm \
      exp/nnet3${nnet3_affix}/extractor || exit 1;
 fi

@@ -38,6 +38,7 @@ dir=exp/nnet3_chain/${data_set}
 train_affix=_sp_vp_hires
 respect_speaker_info=false
 finetune_ivector_extractor=false
+ivector_dim=100
 finetune_phonelm=false
 
 num_gpus=1
@@ -173,6 +174,7 @@ if $finetune_ivector_extractor; then
     # 100.
     echo "$0: training the iVector extractor"
     steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj $nj \
+       --ivector-dim $ivector_dim \
        data/${train_set}${train_affix} $temp_data_root \
        $extractor_dir || exit 1;
   fi
