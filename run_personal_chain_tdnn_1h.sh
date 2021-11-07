@@ -73,7 +73,8 @@ function write_params() {
 }
 
 if ! cuda-compiled; then
-  cat <<EOF && exit 1
+  # cat <<EOF && exit 1
+  cat <<EOF
 This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
 If you want to use GPUs (and have them), go to src/, and configure and make on a machine
 where "nvcc" is installed.
