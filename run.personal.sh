@@ -60,6 +60,7 @@ cp $model/dict/{extra_questions.txt,lexiconp.txt,lexicon.txt,nonsilence_phones.t
 
 [[ $stage -gt -10 ]] || rm -rf data/train/*
 cp $dataset/{text,wav.scp,utt2spk} data/train
+utils/fix_data_dir.sh data/train || exit 1
 # ln -sfT /mnt/input/audio_data audio_data
 # ln -sfT /mnt/input/audio_data/daanzu wav
 

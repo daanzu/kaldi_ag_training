@@ -88,9 +88,9 @@ utils/lang/make_lexicon_fst.py --sil-prob=0.5 --sil-phone=SIL data/lang/lexiconp
     fstarcsort --sort_type=olabel > data/lang/L.fst || exit 1
 
 cp -r $dataset/{text,wav.scp,utt2spk} data/finetune
+utils/fix_data_dir.sh data/finetune || exit 1
 # ln -sfT /mnt/input/audio_data audio_data
 
-# utils/fix_data_dir.sh data/finetune
 $nice_cmd bash run_finetune_tdnn_1a_daanzu.sh --src-dir exp/model_src_dir --nj $(nproc) $*
 
 # > cp -r work.test.per/data/lang/phones/* work.test.fin/data/lang/phones/
