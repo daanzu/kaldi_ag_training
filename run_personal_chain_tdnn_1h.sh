@@ -354,7 +354,7 @@ if [ $stage -le 14 ]; then
     --trainer.max-param-change=2.0 \
     --trainer.num-epochs=$num_epochs \
     --trainer.frames-per-iter=3000000 \
-    --trainer.optimization.num-jobs-initial=$num_gpu_jobs \
+    --trainer.optimization.num-jobs-initial=1 \
     --trainer.optimization.num-jobs-final=$num_gpu_jobs \
     --trainer.optimization.initial-effective-lrate=$initial_lrate \
     --trainer.optimization.final-effective-lrate=$final_lrate \

@@ -296,7 +296,7 @@ if [ $stage -le 9 ]; then
     --trainer.num-chunk-per-minibatch $minibatch_size \
     --trainer.frames-per-iter 1500000 \
     --trainer.num-epochs $num_epochs \
-    --trainer.optimization.num-jobs-initial $num_gpus \
+    --trainer.optimization.num-jobs-initial 1 \
     --trainer.optimization.num-jobs-final $num_gpus \
     --trainer.optimization.initial-effective-lrate $initial_lrate \
     --trainer.optimization.final-effective-lrate $final_lrate \
