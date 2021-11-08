@@ -52,7 +52,9 @@ xent_regularize=0.1
 train_stage=-4  # Normally default -10, but here -4 to skip phone_LM and den.fst generation training stages.
 get_egs_stage=-10
 common_egs_dir=  # you can set this to use previously dumped egs.
-egs_opts="--num-utts-subset 300 --max-jobs-run 4 --max-shuffle-jobs-run 10"  # --num-utts-subset 3000 --max-jobs-run 4 --max-shuffle-jobs-run 10
+num_utts_subset=300
+egs_constrained=true  # false is newer, gives more freedom, is more e2e-like, may help: https://github.com/kaldi-asr/kaldi/pull/2383
+egs_jobs_opts="--max-jobs-run 8 --max-shuffle-jobs-run 25"  # Standard default: --max-jobs-run 15 --max-shuffle-jobs-run 50
 dropout_schedule='0,0@0.20,0.5@0.50,0'
 frames_per_eg=150,110,100,50  # Standard default is 150,110,100 but try 150,110,100,50 for training with utterances of short commands
 chain_left_tolerance=1
@@ -65,6 +67,8 @@ echo "$0 $@"  # Print the command line for logging
 . ./path.sh
 . ./cmd.sh
 . ./utils/parse_options.sh
+
+egs_opts="--num-utts-subset $num_utts_subset --constrained $egs_constrained $egs_jobs_opts"
 
 if [ "$num_gpus" -eq 0 ]; then
   gpu_opt="no"
@@ -290,7 +294,7 @@ if [ $stage -le 9 ]; then
     --trainer.add-option="--optimization.memory-compression-level=2" \
     --egs.dir "$common_egs_dir" \
     --egs.stage $get_egs_stage \
-    --egs.opts "--frames-overlap-per-eg 0 --constrained false $egs_opts" \
+    --egs.opts "--frames-overlap-per-eg 0 $egs_opts" \
     --egs.chunk-width $frames_per_eg \
     --egs.nj $nj \
     --trainer.num-chunk-per-minibatch $minibatch_size \

@@ -34,6 +34,8 @@ chunk_width=140,100,160,50  # Standard default is 140,100,160 but try 140,100,16
 num_utts_subset=300  # default 300; you may want many more for short-utterance datasets <----------------
 dropout_schedule='0,0@0.20,0.3@0.50,0'
 common_egs_dir=
+egs_constrained=true  # false is newer, gives more freedom, is more e2e-like, may help: https://github.com/kaldi-asr/kaldi/pull/2383
+egs_jobs_opts="--max-jobs-run 8 --max-shuffle-jobs-run 25"  # Standard default: --max-jobs-run 15 --max-shuffle-jobs-run 50
 xent_regularize=0.1
 
 # training options
@@ -63,6 +65,8 @@ echo "$0 $@"  # Print the command line for logging
 . ./cmd.sh
 . ./path.sh
 . ./utils/parse_options.sh
+
+egs_opts="--num-utts-subset $num_utts_subset --constrained $egs_constrained $egs_jobs_opts"
 
 num_gpu_jobs=$num_gpus
 
@@ -414,7 +418,7 @@ if [ $stage -le 14 ]; then
     --trainer.num-chunk-per-minibatch=128,64 \
     --egs.chunk-width=$chunk_width \
     --egs.dir="$common_egs_dir" \
-    --egs.opts="--frames-overlap-per-eg 0 --num-utts-subset $num_utts_subset" \
+    --egs.opts="--frames-overlap-per-eg 0 $egs_opts" \
     --cleanup.remove-egs=$remove_egs \
     --cleanup.preserve-model-interval=1000 \
     --use-gpu=true \
