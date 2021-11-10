@@ -30,6 +30,7 @@ get_egs_stage=-10
 decode_iter=
 
 # training options
+tree_num_leaves=3500
 chunk_width=140,100,160,50  # Standard default is 140,100,160 but try 140,100,160,50 for training with utterances of short commands
 num_utts_subset=300  # default 300; you may want many more for short-utterance datasets <----------------
 dropout_schedule='0,0@0.20,0.3@0.50,0'
@@ -40,8 +41,7 @@ xent_regularize=0.1
 
 # training options
 srand=0
-# remove_egs=true
-remove_egs=false
+remove_egs=false  # default: true
 reporting_email=
 
 #decode options
@@ -162,7 +162,7 @@ if [ $stage -le 12 ]; then
   steps/nnet3/chain/build_tree.sh \
     --frame-subsampling-factor 3 \
     --context-opts "--context-width=2 --central-position=1" \
-    --cmd "$train_cmd" 3500 ${lores_train_data_dir} \
+    --cmd "$train_cmd" $tree_num_leaves ${lores_train_data_dir} \
     $lang $ali_dir $tree_dir
 fi
 
