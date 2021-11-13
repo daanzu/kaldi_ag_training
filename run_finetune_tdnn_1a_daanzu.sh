@@ -298,7 +298,7 @@ if [ $stage -le 9 ]; then
     --egs.chunk-width $frames_per_eg \
     --egs.nj $nj \
     --trainer.num-chunk-per-minibatch $minibatch_size \
-    --trainer.frames-per-iter 1500000 \
+    --trainer.frames-per-iter 3000000 \
     --trainer.num-epochs $num_epochs \
     --trainer.optimization.num-jobs-initial 1 \
     --trainer.optimization.num-jobs-final $num_gpus \
