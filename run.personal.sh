@@ -6,25 +6,32 @@ set -euxo pipefail
 nice_cmd="nice ionice -c idle"
 stage=-10
 gmm_stage=0  # always stage+10
+gmm_tree_num_leaves=
 
-# Scan through arguments, checking for stage argument, which if included we need to use to set the gmm_stage
+# Scan through arguments, checking for:
+#   stage argument, which if included we need to use to set the gmm_stage
+#   gmm_tree_num_leaves argument, which if included we use to set the parameter, and don't pass to the chain training
 POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-key="$1"
-case $key in
-    --stage)
-    stage="$2"
-    gmm_stage=$((stage+10))
-    POSITIONAL+=("$1" "$2") # save it in an array for later
-    shift # past argument
-    shift # past value
-    ;;
-    *)    # unknown option
-    POSITIONAL+=("$1") # save it in an array for later
-    shift # past argument
-    ;;
-esac
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        --stage)
+            stage="$2"
+            gmm_stage=$((stage+10))
+            POSITIONAL+=("$1" "$2") # save it in an array for later
+            shift # past argument
+            shift # past value
+            ;;
+        --gmm-tree-num-leaves)
+            gmm_tree_num_leaves="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
@@ -58,12 +65,14 @@ mkdir -p data/train data/dict conf exp
 cp $model/conf/{mfcc,mfcc_hires,online_cmvn}.conf conf
 cp $model/dict/{extra_questions.txt,lexiconp.txt,lexicon.txt,nonsilence_phones.txt,optional_silence.txt,silence_phones.txt} data/dict
 
-[[ $stage -gt -10 ]] || rm -rf data/train/*
+if [[ $stage -le -10 ]] || ! cmp -s $dataset/text data/train/test || ! cmp -s $dataset/wav.scp data/train/wav.scp || ! cmp -s $dataset/utt2spk data/train/utt2spk; then
+    rm -rf data/train/*
+fi
 cp $dataset/{text,wav.scp,utt2spk} data/train
 utils/fix_data_dir.sh data/train || exit 1
 # ln -sfT /mnt/input/audio_data audio_data
 # ln -sfT /mnt/input/audio_data/daanzu wav
 
 # utils/fix_data_dir.sh data/train
-$nice_cmd bash run_personal_gmm.sh --nj $(nproc) --stage $gmm_stage
+$nice_cmd bash run_personal_gmm.sh --nj $(nproc) --stage $gmm_stage ${gmm_tree_num_leaves:+--tree_num_leaves $gmm_tree_num_leaves}
 $nice_cmd bash run_personal_chain_tdnn_1h.sh --nj $(nproc) $*

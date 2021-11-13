@@ -22,7 +22,11 @@ test_decoding=false
 dataset=train
 dict_dir=data/dict
 arpa_file=
+tree_num_leaves=2000
+num_gauss=
 . utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
+
+num_gauss=${num_gauss:-$(($tree_num_leaves * 5))}
 
 . ./path.sh
 . ./cmd.sh
@@ -64,14 +68,14 @@ fi
 if [ $stage -le 2 ] && [ $endstage -ge 2 ]; then
     # tri1 [first triphone pass]
     steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/mono exp/mono_ali
-    steps/train_deltas.sh --cmd "$train_cmd" 1800 9000 data/train data/lang exp/mono_ali exp/tri1
+    steps/train_deltas.sh --cmd "$train_cmd" $tree_num_leaves $num_gauss data/train data/lang exp/mono_ali exp/tri1
     # utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph
 fi
 
 if [ $stage -le 3 ] && [ $endstage -ge 3 ]; then
     # tri2b [LDA+MLLT] aka "tri3"
     steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri1 exp/tri1_ali
-    steps/train_lda_mllt.sh --cmd "$train_cmd" --splice-opts "--left-context=3 --right-context=3" 1800 9000 data/train data/lang exp/tri1_ali exp/tri2b
+    steps/train_lda_mllt.sh --cmd "$train_cmd" --splice-opts "--left-context=3 --right-context=3" $tree_num_leaves $num_gauss data/train data/lang exp/tri1_ali exp/tri2b
     # utils/mkgraph.sh data/lang exp/tri2b exp/tri2b/graph
 fi
 
@@ -79,7 +83,7 @@ if [ $stage -le 4 ] && [ $endstage -ge 4 ]; then
     # tri3b [LDA+MLLT+SAT] aka "tri4"?
     steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri2b exp/tri2b_ali
     #????? steps/align_fmllr.sh --nj 8 --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri2b exp/tri2b_ali
-    steps/train_sat.sh 1800 9000 data/train data/lang exp/tri2b_ali exp/tri3b
+    steps/train_sat.sh $tree_num_leaves $num_gauss data/train data/lang exp/tri2b_ali exp/tri3b
     # utils/mkgraph.sh data/lang exp/tri3b exp/tri3b/graph
     # utils/mkgraph.sh data/lang_ug exp/tri3b exp/tri3b/graph_ug
     # steps/decode_fmllr.sh --config conf/decode.config --nj 1 --num-threads 8 --cmd "$decode_cmd" exp/tri3b/graph_ug data/test exp/tri3b/decode_ug
