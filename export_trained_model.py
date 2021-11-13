@@ -25,6 +25,7 @@ if args.type == 'personal':
         shutil.copy2(os.path.join(base_dir, name), args.output_dir)
     for name in 'final.dubm final.ie final.mat global_cmvn.stats'.split():
         shutil.copy2(os.path.join(base_dir, 'ivector_extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
+    shutil.copy2(os.path.join('exp/chain/tdnn1h_sp', 'accuracy.report'), os.path.join(args.output_dir, 'training'))
 
 elif args.type == 'finetune':
     base_dir = 'exp/nnet3_chain/finetune'
@@ -32,8 +33,8 @@ elif args.type == 'finetune':
         shutil.copy2(os.path.join(base_dir, name), args.output_dir)
     for name in 'final.dubm final.ie final.mat global_cmvn.stats'.split():
         shutil.copy2(os.path.join('exp/nnet3_chain', 'extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
+    shutil.copy2(os.path.join(base_dir, 'accuracy.report'), os.path.join(args.output_dir, 'training'))
 
-shutil.copy2(os.path.join(base_dir, 'accuracy.report'), os.path.join(args.output_dir, 'training'))
 shutil.copy2('params.txt', os.path.join(args.output_dir, 'training'))
 
 print(f"Wrote exported {args.type} model to {args.output_dir}")
