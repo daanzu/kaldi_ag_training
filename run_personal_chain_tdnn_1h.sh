@@ -166,7 +166,7 @@ if [ $stage -le 12 ]; then
     $lang $ali_dir $tree_dir
 fi
 
-if [ $tdnnf_dim -eq 640 ]; then
+if [ $tdnnf_dim = "640" ]; then
   if [ $stage -le 13 ]; then
     # from vosk 0.15
     mkdir -p $dir
@@ -219,7 +219,66 @@ EOF
   initial_lrate=${initial_lrate:-0.00045}
   final_lrate=${final_lrate:-0.000045}
 
-elif [ $tdnnf_dim -eq 738 ]; then
+elif [ $tdnnf_dim = "640spec" ]; then
+  if [ $stage -le 13 ]; then
+    mkdir -p $dir
+    echo "$0: creating neural net configs using the xconfig parser";
+
+    num_targets=$(tree-info $tree_dir/tree |grep num-pdfs|awk '{print $2}')
+    learning_rate_factor=$(echo "print 0.5/$xent_regularize" | python)
+
+    tdnn_opts="l2-regularize=0.008"
+    tdnnf_opts="l2-regularize=0.008 bypass-scale=0.75"
+    linear_opts="l2-regularize=0.008 orthonormal-constraint=-1.0"
+    prefinal_opts="l2-regularize=0.008"
+    output_opts="l2-regularize=0.002"
+
+    write_params num_targets learning_rate_factor tdnn_opts tdnnf_opts linear_opts prefinal_opts output_opts
+
+    mkdir -p $dir/configs
+    cat <<EOF > $dir/configs/network.xconfig
+    input dim=$ivector_dim name=ivector
+    input dim=40 name=input
+
+    # this takes the MFCCs and generates filterbank coefficients.  The MFCCs
+    # are more compressible so we prefer to dump the MFCCs to disk rather
+    # than filterbanks.
+    idct-layer name=idct input=input dim=40 cepstral-lifter=22 affine-transform-file=$dir/configs/idct.mat
+    batchnorm-component name=batchnorm0 input=idct
+    spec-augment-layer name=spec-augment freq-max-proportion=0.5 time-zeroed-proportion=0.2 time-mask-max-frames=20
+
+    delta-layer name=delta input=spec-augment
+    no-op-component name=input2 input=Append(delta, Scale(1.0, ReplaceIndex(ivector, t, 0)))
+
+    # the first splicing is moved before the lda layer, so no splicing here
+    relu-batchnorm-layer name=tdnn1 $tdnn_opts dim=640
+    tdnnf-layer name=tdnnf2 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=1
+    tdnnf-layer name=tdnnf3 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=1
+    tdnnf-layer name=tdnnf4 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=1
+    tdnnf-layer name=tdnnf5 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=0
+    tdnnf-layer name=tdnnf6 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=3
+    tdnnf-layer name=tdnnf7 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=3
+    tdnnf-layer name=tdnnf8 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=3
+    tdnnf-layer name=tdnnf9 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=3 context=left-only
+    tdnnf-layer name=tdnnf10 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=3 context=left-only
+    tdnnf-layer name=tdnnf11 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=3 context=left-only
+    tdnnf-layer name=tdnnf12 $tdnnf_opts dim=640 bottleneck-dim=96 time-stride=3 context=left-only
+    linear-component name=prefinal-l dim=192 $linear_opts
+
+    ## adding the layers for chain branch
+    prefinal-layer name=prefinal-chain input=prefinal-l $prefinal_opts small-dim=192 big-dim=640
+    output-layer name=output include-log-softmax=false dim=$num_targets $output_opts
+
+    # adding the layers for xent branch
+    prefinal-layer name=prefinal-xent input=prefinal-l $prefinal_opts small-dim=192 big-dim=640
+    output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
+EOF
+    steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
+  fi
+  initial_lrate=${initial_lrate:-0.00045}
+  final_lrate=${final_lrate:-0.000045}
+
+elif [ $tdnnf_dim = "738" ]; then
   if [ $stage -le 13 ]; then
     # from mini_librispeech tdnn_1h
     mkdir -p $dir
@@ -273,7 +332,7 @@ EOF
   initial_lrate=${initial_lrate:-0.002}
   final_lrate=${final_lrate:-0.0002}
 
-elif [ $tdnnf_dim -eq 1024 ]; then
+elif [ $tdnnf_dim = "1024" ]; then
   if [ $stage -le 13 ]; then
     # from wsj tdnn_1g
     mkdir -p $dir
@@ -329,7 +388,7 @@ EOF
   # initial_lrate=0.001
   # final_lrate=0.00005
 
-elif [ $tdnnf_dim -eq 1536 ]; then
+elif [ $tdnnf_dim = "1536" ]; then
   if [ $stage -le 13 ]; then
     # from chime5 tdnn_1b
     mkdir -p $dir
