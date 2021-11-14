@@ -36,7 +36,7 @@ tree_dir=exp/nnet3_chain/tree_sp
 dir=exp/nnet3_chain/${data_set}
 
 train_affix=_sp_vp_hires
-respect_speaker_info=false
+respect_speaker_info=false  # You may want false for one-to-one utt2spk
 finetune_ivector_extractor=false
 ivector_dim=100
 finetune_phonelm=false
@@ -275,7 +275,6 @@ if [ $stage -le 9 ]; then
   # tolerance used in chain egs generation using this lats should be 1 or 2 which is
   # (source_egs_tolerance/frame_subsampling_factor)
   # source_egs_tolerance = 5
-  # chain_opts=(--chain.alignment-subsampling-factor=1 --chain.left-tolerance=1 --chain.right-tolerance=1)
   chain_opts=(--chain.alignment-subsampling-factor=1 --chain.left-tolerance=$chain_left_tolerance --chain.right-tolerance=$chain_right_tolerance)
 
   write_params chunk_width dropout_schedule xent_regularize initial_lrate final_lrate num_epochs num_gpu_jobs stage train_stage num_utts_subset
