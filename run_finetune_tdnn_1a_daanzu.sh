@@ -56,7 +56,7 @@ num_utts_subset=300
 egs_constrained=true  # false is newer, gives more freedom, is more e2e-like, may help: https://github.com/kaldi-asr/kaldi/pull/2383
 egs_jobs_opts="--max-jobs-run 8 --max-shuffle-jobs-run 25"  # Standard default: --max-jobs-run 15 --max-shuffle-jobs-run 50
 dropout_schedule='0,0@0.20,0.5@0.50,0'
-frames_per_eg=150,110,100,50  # Standard default is 150,110,100 but try 150,110,100,50 for training with utterances of short commands
+frames_per_eg=140,100,160,50  # Standard default is 140,100,160 but try 140,100,160,50 for training with utterances of short commands
 chain_left_tolerance=1
 chain_right_tolerance=1
 
