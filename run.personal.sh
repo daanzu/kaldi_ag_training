@@ -7,6 +7,7 @@ nice_cmd="nice ionice -c idle"
 stage=-10
 gmm_stage=0  # always stage+10
 gmm_tree_num_leaves=
+oov_word=
 
 # Scan through arguments, checking for:
 #   stage argument, which if included we need to use to set the gmm_stage
@@ -24,6 +25,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         --gmm-tree-num-leaves)
             gmm_tree_num_leaves="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --oov-word)
+            oov_word="$2"
             shift # past argument
             shift # past value
             ;;
@@ -74,5 +80,5 @@ utils/fix_data_dir.sh data/train || exit 1
 # ln -sfT /mnt/input/audio_data/daanzu wav
 
 # utils/fix_data_dir.sh data/train
-$nice_cmd bash run_personal_gmm.sh --nj $(nproc) --stage $gmm_stage ${gmm_tree_num_leaves:+--tree_num_leaves $gmm_tree_num_leaves}
+$nice_cmd bash run_personal_gmm.sh --nj $(nproc) --stage $gmm_stage ${gmm_tree_num_leaves:+--tree-num-leaves $gmm_tree_num_leaves} ${oov_word:+--oov-word $oov_word}
 $nice_cmd bash run_personal_chain_tdnn_1h.sh --nj $(nproc) $*

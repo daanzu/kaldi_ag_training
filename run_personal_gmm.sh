@@ -21,6 +21,7 @@ nj=16
 test_decoding=false
 dataset=train
 dict_dir=data/dict
+oov_word="<unk>"
 arpa_file=
 tree_num_leaves=2000
 num_gauss=
@@ -46,7 +47,7 @@ if [ $stage -le 0 ] && [ $endstage -ge 0 ]; then
 
     mkdir -p data/local/dict
     cp $dict_dir/* data/local/dict/
-    utils/prepare_lang.sh data/local/dict "<unk>" data/local/lang data/lang
+    utils/prepare_lang.sh data/local/dict "$oov_word" data/local/lang data/lang
     utils/validate_lang.pl data/lang
 
     # if [ -z "$arpa_file" ]; then
