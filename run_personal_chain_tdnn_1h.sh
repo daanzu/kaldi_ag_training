@@ -93,13 +93,15 @@ fi
 # The iVector-extraction and feature-dumping parts are the same as the standard
 # nnet3 setup, and you can skip them by setting "--stage 11" if you have already
 # run those things.
-bash run_personal_nnet3_ivector_common.sh --stage $stage \
-                                  --nj $nj \
-                                  --train-set $train_set \
-                                  --gmm $gmm \
-                                  --respect-speaker-info $respect_speaker_info \
-                                  --ivector-dim $ivector_dim \
-                                  --nnet3-affix "$nnet3_affix" || exit 1;
+if [ $stage -le 9 ]; then
+  bash run_personal_nnet3_ivector_common.sh --stage $stage \
+                                    --nj $nj \
+                                    --train-set $train_set \
+                                    --gmm $gmm \
+                                    --respect-speaker-info $respect_speaker_info \
+                                    --ivector-dim $ivector_dim \
+                                    --nnet3-affix "$nnet3_affix" || exit 1;
+fi
 
 # Problem: We have removed the "train_" prefix of our training set in
 # the alignment directory names! Bad!
