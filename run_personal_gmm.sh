@@ -37,14 +37,6 @@ if [ $stage -le 0 ] && [ $endstage -ge 0 ]; then
     rm -f data/train/{spk2utt,feats.scp,cmvn.scp}
     rm -rf data/local data/lang
 
-    utils/fix_data_dir.sh data/$dataset || exit 1;
-    # utils/utt2spk_to_spk2utt.pl data/$dataset/utt2spk > data/$dataset/spk2utt
-    featdir=mfcc
-    steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/$dataset exp/make_mfcc/$dataset $featdir
-    # steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" --allow-downsample true data/$dataset exp/make_mfcc/$dataset $featdir
-    steps/compute_cmvn_stats.sh data/$dataset exp/make_mfcc/$dataset $featdir
-    utils/validate_data_dir.sh data/$dataset
-
     mkdir -p data/local/dict
     cp $dict_dir/* data/local/dict/
     utils/prepare_lang.sh data/local/dict "$oov_word" data/local/lang data/lang
@@ -61,26 +53,36 @@ if [ $stage -le 0 ] && [ $endstage -ge 0 ]; then
 fi
 
 if [ $stage -le 1 ] && [ $endstage -ge 1 ]; then
+    utils/fix_data_dir.sh data/$dataset || exit 1;
+    # utils/utt2spk_to_spk2utt.pl data/$dataset/utt2spk > data/$dataset/spk2utt
+    featdir=mfcc
+    steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/$dataset exp/make_mfcc/$dataset $featdir
+    # steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" --allow-downsample true data/$dataset exp/make_mfcc/$dataset $featdir
+    steps/compute_cmvn_stats.sh data/$dataset exp/make_mfcc/$dataset $featdir
+    utils/validate_data_dir.sh data/$dataset
+fi
+
+if [ $stage -le 2 ] && [ $endstage -ge 2 ]; then
     # monophone
     steps/train_mono.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/mono
     # utils/mkgraph.sh data/lang exp/mono exp/mono/graph
 fi
 
-if [ $stage -le 2 ] && [ $endstage -ge 2 ]; then
+if [ $stage -le 3 ] && [ $endstage -ge 3 ]; then
     # tri1 [first triphone pass]
     steps/align_si.sh --nj $nj --cmd "$train_cmd" data/train data/lang exp/mono exp/mono_ali
     steps/train_deltas.sh --cmd "$train_cmd" $tree_num_leaves $num_gauss data/train data/lang exp/mono_ali exp/tri1
     # utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph
 fi
 
-if [ $stage -le 3 ] && [ $endstage -ge 3 ]; then
+if [ $stage -le 4 ] && [ $endstage -ge 4 ]; then
     # tri2b [LDA+MLLT] aka "tri3"
     steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri1 exp/tri1_ali
     steps/train_lda_mllt.sh --cmd "$train_cmd" --splice-opts "--left-context=3 --right-context=3" $tree_num_leaves $num_gauss data/train data/lang exp/tri1_ali exp/tri2b
     # utils/mkgraph.sh data/lang exp/tri2b exp/tri2b/graph
 fi
 
-if [ $stage -le 4 ] && [ $endstage -ge 4 ]; then
+if [ $stage -le 5 ] && [ $endstage -ge 5 ]; then
     # tri3b [LDA+MLLT+SAT] aka "tri4"?
     steps/align_si.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri2b exp/tri2b_ali
     #????? steps/align_fmllr.sh --nj 8 --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri2b exp/tri2b_ali
@@ -92,7 +94,7 @@ if [ $stage -le 4 ] && [ $endstage -ge 4 ]; then
     # head exp/tri3b_cleanup/all_info.sorted.txt
 fi
 
-# if [ $stage -le 5 ] && [ $endstage -ge 5 ]; then
+# if [ $stage -le 6 ] && [ $endstage -ge 6 ]; then
 #     # tri3b_mmi [LDA+MLLT+SAT+MMI] aka "tri4_mmi"
 #     steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" --use-graphs true data/train data/lang exp/tri3b exp/tri3b_ali
 #     steps/make_denlats.sh --config conf/decode.config --nj $nj --cmd "$train_cmd" --transform-dir exp/tri3b_ali data/train data/lang exp/tri3b exp/tri3b_denlats
