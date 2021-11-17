@@ -35,6 +35,7 @@ elif args.type == 'finetune':
         shutil.copy2(os.path.join('exp/nnet3_chain', 'extractor', name), os.path.join(args.output_dir, 'ivector_extractor'))
     shutil.copy2(os.path.join(base_dir, 'accuracy.report'), os.path.join(args.output_dir, 'training'))
 
+shutil.copytree('data/dict', os.path.join(args.output_dir, 'dict'))
 shutil.copy2('params.txt', os.path.join(args.output_dir, 'training'))
 
 print(f"Wrote exported {args.type} model to {args.output_dir}")
