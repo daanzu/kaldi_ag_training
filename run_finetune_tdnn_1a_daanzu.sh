@@ -227,14 +227,10 @@ if [ $stage -le 5 ]; then
     --scale-opts '--transition-scale=1.0 --self-loop-scale=1.0' \
     --online-ivector-dir $train_ivector_dir \
     --generate_ali_from_lats true \
+    --frames-per-chunk 150 \
+    --beam 100 \
     $train_data_dir $lang_dir ${src_dir} ${lat_dir}
-    # --frames-per-chunk 150 \
   rm $lat_dir/fsts.*.gz # save space
-
-  # FIXME: steps/nnet3/chain/align_lats.sh?
-  # steps/nnet3/chain/align_lats.sh --cmd "$train_cmd" --nj $nj \
-  #   --online-ivector-dir $train_ivector_dir \
-  #   $train_data_dir $lang_dir ${src_dir} ${lat_dir}
 fi
 
 # NOTE: We must use the same tree as was used to train the nnet model (need the same num_pdfs), so we can't finetune it.
