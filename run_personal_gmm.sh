@@ -13,7 +13,7 @@
 #   data/lang/
 #   exp/{make_mfcc,mono,mono_ali,tri1,tri1_ali,tri2b,tri2b_ali,tri3b}
 
-set -ev
+set -e
 
 stage=0
 endstage=99

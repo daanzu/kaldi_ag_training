@@ -1,7 +1,7 @@
 # docker run -it --rm -v $(pwd):/mnt/input -v $(pwd)/work:/mnt/work -w /mnt/work --user "$(id -u):$(id -g)" daanzu/kaldi_ag_training:2020-11-28 bash run.personal.sh models/kaldi_model_daanzu_20200905_1ep-mediumlm data/standard2train --num-epochs 5 --stage -10
 # docker run -it --rm -v $(pwd):/mnt/input -v $(pwd)/work:/mnt/work -w /mnt/work --user "$(id -u):$(id -g)" --runtime=nvidia daanzu/kaldi_ag_training_gpu:2020-11-28 bash run.personal.sh models/kaldi_model_daanzu_20200905_1ep-mediumlm data/standard2train --num-epochs 5 --stage -10
 
-set -euxo pipefail
+set -euo pipefail
 
 nice_cmd="nice ionice -c idle"
 stage=-10
