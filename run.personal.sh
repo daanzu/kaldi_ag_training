@@ -72,9 +72,10 @@ cp $model/conf/{mfcc,mfcc_hires,online_cmvn}.conf conf
 cp $model/dict/{extra_questions.txt,lexiconp.txt,lexicon.txt,nonsilence_phones.txt,optional_silence.txt,silence_phones.txt} data/dict
 
 if [[ $stage -le -10 ]] || ! cmp -s $dataset/text data/train/test || ! cmp -s $dataset/wav.scp data/train/wav.scp || ! cmp -s $dataset/utt2spk data/train/utt2spk; then
+    echo "WARNING: deleting old dataset!"
     rm -rf data/train/*
+    cp --preserve=timestamps $dataset/{text,wav.scp,utt2spk} data/train
 fi
-cp $dataset/{text,wav.scp,utt2spk} data/train
 utils/fix_data_dir.sh data/train || exit 1
 # ln -sfT /mnt/input/audio_data audio_data
 # ln -sfT /mnt/input/audio_data/daanzu wav
