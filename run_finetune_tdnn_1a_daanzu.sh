@@ -363,6 +363,8 @@ if [ $stage -le 9 ]; then
   # Exclude phone_LM and den.fst generation training stages.
   # if [ $train_stage -lt -4 ]; then train_stage=-4 ; fi
 
+  if [ $train_stage -le 0 ]; then rm $dir/log/compute_prob*.log ; fi
+
   chain_opts=()
   if ! $gmm_align; then
     # we use chain model from source to generate lats for target and the

@@ -94,8 +94,6 @@ if [[ ! -e data/finetune/text || ! -e data/finetune/wav.scp || ! -e data/finetun
     utils/fix_data_dir.sh data/finetune || exit 1
 fi
 # ln -sfT /mnt/input/audio_data audio_data
+# ln -sfT /mnt/input/audio_data/daanzu wav
 
 $nice_cmd bash run_finetune_tdnn_1a_daanzu.sh --src-dir exp/model_src_dir --nj $(nproc) $*
-
-# > cp -r work.test.per/data/lang/phones/* work.test.fin/data/lang/phones/
-# > cp -r work.test.per/data/lang_chain/topo work.test.fin/data/lang/
