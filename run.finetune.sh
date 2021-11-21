@@ -68,7 +68,7 @@ cp -r $model/dict data/  # Only needed if/for finetune_tree
 # cp $model/tree_stuff/sets.int data/lang/phones/  # Only needed if/for finetune_tree
 mkdir -p exp/nnet3_chain/finetune/
 
-if [[ ! "$*" =~ .*"--finetune-phonelm true".* ]]; then
+if [[ ! "$*" =~ .*"--finetune-phonelm true".* && ! "$*" =~ .*"--gmm-align true".* ]]; then
     # Careful not to overwrite finetuned phonelm, if we are finetuning it!
 
     # Skip train.py::create_phone_lm()

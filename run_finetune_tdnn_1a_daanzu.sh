@@ -35,11 +35,15 @@ tree_dir=exp/nnet3_chain/tree_sp
 # dir=${src_dir}_${data_set}
 dir=exp/nnet3_chain/${data_set}
 
+oov_word="<unk>"
+
 train_affix=_sp_vp_hires
 respect_speaker_info=false  # You may want false for one-to-one utt2spk
 finetune_ivector_extractor=false
 ivector_dim=100
 finetune_phonelm=false
+gmm_align=false
+gmm_align_stage=0
 
 num_gpus=1
 num_epochs=5
@@ -198,17 +202,16 @@ if $finetune_ivector_extractor; then
     # having a larger number of speakers is helpful for generalization, and to
     # handle per-utterance decoding well (iVector starts at zero).
     ivectordir=${train_ivector_dir}
-    temp_data_root=${ivectordir}
+    modified_data_dir=${ivectordir}/data_${train_set}${train_affix}_max2
     utils/data/modify_speaker_info.sh --utts-per-spk-max 2 --respect-speaker-info $respect_speaker_info \
-      data/${train_set}${train_affix} ${temp_data_root}/${train_set}${train_affix}_max2
+      data/${train_set}${train_affix} ${modified_data_dir}
 
     steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj $nj \
-      ${temp_data_root}/${train_set}${train_affix}_max2 \
-      $extractor_dir $ivectordir
+      ${modified_data_dir} $extractor_dir $ivectordir
   fi
 
 else
-  if [ $stage -le 4 ]; then
+  if [ $stage -le 4 ] && ! $gmm_align; then
     log_stage 4 "Extract ivectors of the new dataset using source model's extractor"
     # (Approximately 0.066min single-core compute time per core per 1hr audio data)
     steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj $nj \
@@ -216,11 +219,9 @@ else
   fi
 fi
 
-if [ $stage -le 5 ]; then
+if [ $stage -le 5 ] && ! $gmm_align; then
   log_stage 5 "Align the new dataset with source NN"
   # (Approximately 0.085hr single-core compute time per core per 1hr audio data)
-
-  # steps/nnet3/align.sh --cmd "$train_cmd" --nj ${nj} ${data_dir} $lang_dir ${src_dir} ${ali_dir}
 
   steps/nnet3/align_lats.sh --cmd "$train_cmd" --nj $nj \
     --acoustic-scale 1.0 \
@@ -241,6 +242,101 @@ if $finetune_phonelm; then
     # Requires: $tree_dir/{tree,final.mdl}
     cp $lat_dir/ali.*.gz $lat_dir/num_jobs $tree_dir
     # Note: actually do it by setting $train_stage <= -6
+  fi
+fi
+
+if $gmm_align; then
+  lat_dir=exp/chain/tri3_train_sp_lats
+fi
+
+if [ $stage -le 7 ] && $gmm_align; then
+  if [ $gmm_align_stage -le 0 ]; then
+    utils/prepare_lang.sh data/dict "$oov_word" data/lang_gmm_local data/lang_gmm
+  fi
+
+  if [ $gmm_align_stage -le 1 ]; then
+    # utils/subset_data_dir.sh $data_dir 15000 data/train_15k
+    steps/train_mono.sh --nj $nj --cmd "$train_cmd" \
+      $data_dir data/lang_gmm exp/mono_finetune
+    steps/align_si.sh --nj $nj --cmd "$train_cmd" \
+      $data_dir data/lang_gmm exp/mono_finetune exp/mono_finetune_ali
+  fi
+
+  if [ $gmm_align_stage -le 2 ]; then
+    steps/train_deltas.sh --cmd "$train_cmd" \
+      5000 80000 $data_dir data/lang_gmm exp/mono_finetune_ali exp/tri1_finetune
+    steps/align_si.sh --nj $nj --cmd "$train_cmd" \
+      $data_dir data/lang_gmm exp/tri1_finetune exp/tri1_finetune_ali
+  fi
+
+  if [ $gmm_align_stage -le 3 ]; then
+    steps/train_lda_mllt.sh --cmd "$train_cmd" \
+      --splice-opts "--left-context=3 --right-context=3" \
+      5000 80000 $data_dir data/lang_gmm exp/tri1_finetune_ali exp/tri2_finetune
+    steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
+      $data_dir data/lang_gmm exp/tri2_finetune exp/tri2_finetune_ali
+  fi
+
+  if [ $gmm_align_stage -le 4 ]; then
+    steps/train_sat.sh --cmd "$train_cmd" \
+      5000 80000 $data_dir data/lang_gmm exp/tri2_finetune_ali exp/tri3_finetune
+    steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
+      $data_dir data/lang_gmm exp/tri3_finetune exp/tri3_finetune_ali
+  fi
+
+  if [ $gmm_align_stage -le 5 ]; then
+    # We extract iVectors on the speed-perturbed training data after combining
+    # short segments, which will be what we train the system on.  With
+    # --utts-per-spk-max 2, the script pairs the utterances into twos, and treats
+    # each of these pairs as one speaker; this gives more diversity in iVectors..
+    # Note that these are extracted 'online'.
+
+    # note, we don't encode the 'max2' in the name of the ivectordir even though
+    # that's the data we extract the ivectors from, as it's still going to be
+    # valid for the non-'max2' data, the utterance list is the same.
+
+    # having a larger number of speakers is helpful for generalization, and to
+    # handle per-utterance decoding well (iVector starts at zero).
+    ivectordir=${train_ivector_dir}
+    modified_data_dir=${ivectordir}/data_${data_set}${train_affix}_max2
+    utils/data/modify_speaker_info.sh --utts-per-spk-max 2 --respect-speaker-info $respect_speaker_info \
+      data/${data_set}${train_affix} ${modified_data_dir}
+
+    steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj $nj \
+      ${modified_data_dir} $extractor_dir $ivectordir
+  fi
+
+  if [ $gmm_align_stage -le 6 ]; then
+    steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" \
+      --generate-ali-from-lats true \
+      ${data_dir}_sp data/lang_gmm exp/tri3_finetune $lat_dir
+    rm $lat_dir/fsts.*.gz
+  fi
+
+  if [ $gmm_align_stage -le 7 ]; then
+    # Adapted from steps/nnet3/chain/make_weighted_den_fst.sh
+
+    mkdir -p $dir/log
+    for f in $lat_dir/ali.1.gz $lat_dir/final.mdl $lat_dir/tree; do
+      [ ! -f $f ] && echo "$0: Expected file $f to exist" && exit 1;
+    done
+    utils/lang/check_phones_compatible.sh $src_dir/phones.txt $lat_dir/phones.txt || exit 1;
+
+    cp $src_dir/tree $dir/ || exit 1
+
+    # num_jobs=$(cat $lat_dir/num_jobs)
+    # for j in $(seq $num_jobs); do gunzip -c $lat_dir/ali.$j.gz; done | \
+    $train_cmd $dir/log/make_phone_lm_fst.log \
+      gunzip -c $lat_dir/ali.*.gz \| \
+      ali-to-phones $lat_dir/final.mdl ark:- ark:- \| \
+      chain-est-phone-lm '--num-extra-lm-states=200' ark:- $dir/phone_lm.fst || exit 1;
+
+    copy-transition-model $src_dir/final.mdl $dir/0.trans_mdl || exit 1;
+
+    $train_cmd $dir/log/make_den_fst.log \
+      chain-make-den-fst $dir/tree $dir/0.trans_mdl \
+      $dir/phone_lm.fst \
+      $dir/den.fst $dir/normalization.fst || exit 1
   fi
 fi
 
@@ -267,11 +363,14 @@ if [ $stage -le 9 ]; then
   # Exclude phone_LM and den.fst generation training stages.
   # if [ $train_stage -lt -4 ]; then train_stage=-4 ; fi
 
-  # we use chain model from source to generate lats for target and the
-  # tolerance used in chain egs generation using this lats should be 1 or 2 which is
-  # (source_egs_tolerance/frame_subsampling_factor)
-  # source_egs_tolerance = 5
-  chain_opts=(--chain.alignment-subsampling-factor=1 --chain.left-tolerance=$chain_left_tolerance --chain.right-tolerance=$chain_right_tolerance)
+  chain_opts=()
+  if ! $gmm_align; then
+    # we use chain model from source to generate lats for target and the
+    # tolerance used in chain egs generation using this lats should be 1 or 2 which is
+    # (source_egs_tolerance/frame_subsampling_factor)
+    # source_egs_tolerance = 5
+    chain_opts=(--chain.alignment-subsampling-factor=1 --chain.left-tolerance=$chain_left_tolerance --chain.right-tolerance=$chain_right_tolerance)
+  fi
 
   write_params chunk_width dropout_schedule xent_regularize initial_lrate final_lrate num_epochs num_gpu_jobs stage train_stage num_utts_subset
 
