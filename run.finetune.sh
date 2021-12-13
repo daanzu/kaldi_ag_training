@@ -4,6 +4,25 @@
 set -euo pipefail
 
 nice_cmd="nice ionice -c idle"
+stage=1
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        --stage)
+            stage="$2"
+            POSITIONAL+=("$1" "$2") # save it in an array for later
+            shift # past argument
+            shift # past value
+            ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
 
 [[ $# -ge 2 ]] || exit 1
 
@@ -87,7 +106,8 @@ utils/lang/make_lexicon_fst.py --sil-prob=0.5 --sil-phone=SIL data/lang/lexiconp
     fstcompile --isymbols=$model/phones.txt --osymbols=$model/words.txt --keep_isymbols=false --keep_osymbols=false | \
     fstarcsort --sort_type=olabel > data/lang/L.fst || exit 1
 
-if [[ ! -e data/finetune/text || ! -e data/finetune/wav.scp || ! -e data/finetune/utt2spk || $dataset/text -nt data/finetune/text || $dataset/wav.scp -nt data/finetune/wav.scp || $dataset/utt2spk -nt data/finetune/utt2spk ]]; then
+# if [[ ! -e data/finetune/text || ! -e data/finetune/wav.scp || ! -e data/finetune/utt2spk || $dataset/text -nt data/finetune/text || $dataset/wav.scp -nt data/finetune/wav.scp || $dataset/utt2spk -nt data/finetune/utt2spk ]]; then
+if [[ $stage -le 1 ]]; then
     echo "WARNING: deleting old dataset!"
     rm -rf data/finetune/*
     cp --preserve=timestamps $dataset/{text,wav.scp,utt2spk} data/finetune/

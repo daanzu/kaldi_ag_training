@@ -71,7 +71,8 @@ mkdir -p data/train data/dict conf exp
 cp $model/conf/{mfcc,mfcc_hires,online_cmvn}.conf conf
 cp $model/dict/{extra_questions.txt,lexiconp.txt,lexicon.txt,nonsilence_phones.txt,optional_silence.txt,silence_phones.txt} data/dict
 
-if [[ $stage -le -10 || ! -e data/train/text || ! -e data/train/wav.scp || ! -e data/train/utt2spk || $dataset/text -nt data/train/text || $dataset/wav.scp -nt data/train/wav.scp || $dataset/utt2spk -nt data/train/utt2spk ]]; then
+# if [[ $stage -le -10 || ! -e data/train/text || ! -e data/train/wav.scp || ! -e data/train/utt2spk || $dataset/text -nt data/train/text || $dataset/wav.scp -nt data/train/wav.scp || $dataset/utt2spk -nt data/train/utt2spk ]]; then
+if [[ $stage -le -10 ]]; then
     echo "WARNING: deleting old dataset!"
     rm -rf data/train/*
     cp --preserve=timestamps $dataset/{text,wav.scp,utt2spk} data/train/
