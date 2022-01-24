@@ -455,7 +455,10 @@ if [ $stage -le 14 ]; then
     utils/create_split_dir.pl \
      /export/b0{3,4,5,6}/$USER/kaldi-data/egs/mini_librispeech-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
   fi
+
   # [ $num_gpu_jobs_final -gt 1 ] && sudo nvidia-smi -c 3
+  if [ $train_stage -le 0 ]; then rm -f $dir/log/compute_prob*.log || true ; fi
+
   write_params chunk_width dropout_schedule xent_regularize initial_lrate final_lrate num_epochs num_gpu_jobs_initial num_gpu_jobs_final stage train_stage num_utts_subset
   # --num-valid-egs-combine --num-train-egs-combine --num-egs-diagnostic ??? see steps/nnet3/chain/get_egs.sh
 
