@@ -68,7 +68,9 @@ echo "$0 $@"  # Print the command line for logging
 
 egs_opts="--num-utts-subset $num_utts_subset --constrained $egs_constrained $egs_jobs_opts"
 
-num_gpu_jobs=$num_gpus
+num_gpu_jobs_final=$num_gpus
+num_gpu_jobs_initial=$num_gpus
+# num_gpu_jobs_initial=$(($num_gpus < 2 ? $num_gpus : 2))
 
 function write_params() {
   for v in $*; do
@@ -453,8 +455,8 @@ if [ $stage -le 14 ]; then
     utils/create_split_dir.pl \
      /export/b0{3,4,5,6}/$USER/kaldi-data/egs/mini_librispeech-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
   fi
-  [ $num_gpu_jobs -gt 1 ] && sudo nvidia-smi -c 3
-  write_params chunk_width dropout_schedule xent_regularize initial_lrate final_lrate num_epochs num_gpu_jobs stage train_stage num_utts_subset
+  # [ $num_gpu_jobs_final -gt 1 ] && sudo nvidia-smi -c 3
+  write_params chunk_width dropout_schedule xent_regularize initial_lrate final_lrate num_epochs num_gpu_jobs_initial num_gpu_jobs_final stage train_stage num_utts_subset
   # --num-valid-egs-combine --num-train-egs-combine --num-egs-diagnostic ??? see steps/nnet3/chain/get_egs.sh
 
   steps/nnet3/chain/train.py --stage=$train_stage \
@@ -472,8 +474,8 @@ if [ $stage -le 14 ]; then
     --trainer.max-param-change=2.0 \
     --trainer.num-epochs=$num_epochs \
     --trainer.frames-per-iter=3000000 \
-    --trainer.optimization.num-jobs-initial=1 \
-    --trainer.optimization.num-jobs-final=$num_gpu_jobs \
+    --trainer.optimization.num-jobs-initial=$num_gpu_jobs_initial \
+    --trainer.optimization.num-jobs-final=$num_gpu_jobs_final \
     --trainer.optimization.initial-effective-lrate=$initial_lrate \
     --trainer.optimization.final-effective-lrate=$final_lrate \
     --trainer.num-chunk-per-minibatch=128,64 \
